@@ -130,18 +130,20 @@ class Consumer(object):
             self.recorder.write_offset(last)
             self.offset = last
 
-    def read(self):
+    def connect(self):
         self.offset = self.recorder.read_offset()
         if self.offset:
             self.connection.connect(self.key, self.secret, resume_offset=self.offset)
         else:
             self.connection.connect(self.key, self.secret, start='LATEST')
 
+    def read(self):
         while not self.stop:
             try:
                 line = next(self.connection.stream)
                 if not line:
                     # Got keepalive in form of blank line
+                    yield None
                     continue
                 logger.debug("Received entry: %s", line)
                 e = Event.from_json(line)
