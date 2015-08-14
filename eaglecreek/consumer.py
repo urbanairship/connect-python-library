@@ -159,7 +159,7 @@ class Consumer(object):
             except (requests.exceptions.ConnectionError,
                     StopIteration):
                 self.connection.close()
-                self.connection.connect(key, secret, resume_offset=self.offset)
+                self.connection.connect(self.key, self.secret, resume_offset=self.offset)
 
 
 class Event(object):
