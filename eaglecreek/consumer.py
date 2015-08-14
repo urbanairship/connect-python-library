@@ -17,6 +17,7 @@ class Connection(object):
     _conn = None
     stop = False
     url = None
+    cookies = None
 
     def __init__(self, url):
         self.url = url
@@ -57,8 +58,14 @@ class Connection(object):
             body = json.dumps(payload)
 
             try:
-                self._conn = requests.post(self.url, data=body, headers=self._headers(key, secret), stream=True)
-                if not self._conn.status_code == 200:
+                self._conn = requests.post(self.url, data=body,
+                        headers=self._headers(key, secret), stream=True,
+                        cookies=self.cookies)
+                if self._conn.status_code == 307:
+                    logging.info("Handling redirect, retrying [%s]", attempts)
+                    self.cookies = self._conn.cookies
+                    continue
+                elif not self._conn.status_code == 200:
                     raise Exception("uh oh got a %s" % self._conn.status_code)
                 self.stream = self._conn.iter_lines()
                 attempts = 0
