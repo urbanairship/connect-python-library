@@ -9,7 +9,7 @@ import requests
 
 logger = logging.getLogger("eaglecreek")
 
-EC_URL = 'https://stream.urbanairship.com/api/events/'
+EC_URL = 'https://connect.urbanairship.com/api/events/'
 
 
 class Connection(object):
