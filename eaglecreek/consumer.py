@@ -19,7 +19,8 @@ class Connection(object):
     url = None
     cookies = None
 
-    def __init__(self, url):
+    def __init__(self, app_key, url):
+        self.app_key = app_key
         self.url = url
 
     def close(self):
@@ -28,18 +29,17 @@ class Connection(object):
         self._conn = None
         self.stream = None
 
-    def _headers(self, key, secret):
-        auth = 'Basic %s' % (
-            '%s:%s' % (key, secret)
-        ).encode('base64').rstrip()
+    def _headers(self, access_token):
+        auth = 'Bearer %s' % access_token
         headers = {
             'Authorization': auth,
             'Accept': 'application/vnd.urbanairship+x-ndjson; version=3;',
             'Content-Type': 'application/json',
+            'X-UA-Appkey': self.app_key,
         }
         return headers
 
-    def connect(self, key, secret, resume_offset=None, start=None):
+    def connect(self, access_token, resume_offset=None, start=None):
         logger.info("Opening connection to %s, offset %s", self.url,
             resume_offset or start)
 
@@ -59,7 +59,7 @@ class Connection(object):
 
             try:
                 self._conn = requests.post(self.url, data=body,
-                        headers=self._headers(key, secret), stream=True,
+                        headers=self._headers(access_token), stream=True,
                         cookies=self.cookies)
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
@@ -83,8 +83,8 @@ class Connection(object):
 
 
 class Consumer(object):
-    key = None
-    secret = None
+    app_key = None
+    access_token = None
     recorder = None
     url = None
     connection = None
@@ -93,16 +93,16 @@ class Consumer(object):
     offset_filename = '.offset'
     offset = 'LATEST'
 
-    def __init__(self, key, secret, recorder, url=None):
-        self.key = key
-        self.secret = secret
+    def __init__(self, app_key, access_token, recorder, url=None):
+        self.app_key = app_key
+        self.access_token = access_token
         self.recorder = recorder
         if url is not None:
             self.url = url
         else:
             self.url = EC_URL
         self.outstanding = collections.OrderedDict()
-        self.connection = Connection(self.url)
+        self.connection = Connection(app_key, self.url)
 
     def record(self, event):
         self.outstanding[event.offset] = event
@@ -140,9 +140,9 @@ class Consumer(object):
     def connect(self):
         self.offset = self.recorder.read_offset()
         if self.offset:
-            self.connection.connect(self.key, self.secret, resume_offset=self.offset)
+            self.connection.connect(self.access_token, resume_offset=self.offset)
         else:
-            self.connection.connect(self.key, self.secret, start='LATEST')
+            self.connection.connect(self.access_token, start='LATEST')
 
     def read(self):
         while not self.stop:
@@ -159,7 +159,7 @@ class Consumer(object):
             except (requests.exceptions.ConnectionError,
                     StopIteration):
                 self.connection.close()
-                self.connection.connect(self.key, self.secret, resume_offset=self.offset)
+                self.connection.connect(self.access_token, resume_offset=self.offset)
 
 
 class Event(object):
