@@ -39,7 +39,7 @@ class Connection(object):
         }
         return headers
 
-    def connect(self, access_token, resume_offset=None, start=None):
+    def connect(self, access_token, filters, resume_offset=None, start=None):
         logger.info("Opening connection to %s, offset %s", self.url,
             resume_offset or start)
 
@@ -55,6 +55,8 @@ class Connection(object):
                 payload['start'] = start
             else:
                 payload['start'] = 'LATEST'
+            if filters:
+                payload['filters'] = filters
             body = json.dumps(payload)
 
             try:
@@ -92,6 +94,7 @@ class Consumer(object):
     stop = False
     offset_filename = '.offset'
     offset = 'LATEST'
+    filters = None
 
     def __init__(self, app_key, access_token, recorder, url=None):
         self.app_key = app_key
@@ -103,6 +106,7 @@ class Consumer(object):
             self.url = EC_URL
         self.outstanding = collections.OrderedDict()
         self.connection = Connection(app_key, self.url)
+        self.filters = []
 
     def record(self, event):
         self.outstanding[event.offset] = event
@@ -140,9 +144,9 @@ class Consumer(object):
     def connect(self):
         self.offset = self.recorder.read_offset()
         if self.offset:
-            self.connection.connect(self.access_token, resume_offset=self.offset)
+            self.connection.connect(self.access_token, self.filters, resume_offset=self.offset)
         else:
-            self.connection.connect(self.access_token, start='LATEST')
+            self.connection.connect(self.access_token, self.filters, start='LATEST')
 
     def read(self):
         while not self.stop:
@@ -160,6 +164,9 @@ class Consumer(object):
                     StopIteration):
                 self.connection.close()
                 self.connection.connect(self.access_token, resume_offset=self.offset)
+
+    def add_filter(self, filter_):
+        self.filters.append(filter_.filters)
 
 
 class Event(object):
