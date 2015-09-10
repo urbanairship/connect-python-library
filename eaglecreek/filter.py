@@ -50,7 +50,8 @@ class Filter(object):
             amazon_channel=None, named_user_id=None):
         """Include events that are for this channel or named user.
 
-        Unlike the other filters, this can handle multiple options, so multiple options can be used with either a single string or a sequence, e.g.:
+        Unlike the other filters, this can handle multiple options, so multiple
+        options can be used with either a single string or a sequence, e.g.:
 
         >>> filter_.devices(ios_channel='73757eeb-54cc-4337-84d7-484046e9f607')
         >>> filter_.devices(android_channel=[
