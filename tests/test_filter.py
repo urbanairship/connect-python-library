@@ -1,19 +1,19 @@
 import unittest
 
-import eaglecreek
+import uaconnect
 
 
 class TestFilter(unittest.TestCase):
 
     def test_invalid_device_type(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
 
         self.assertRaises(ValueError, f.device_types, 'ios', 'foobar')
         self.assertRaises(ValueError, f.device_types)
         self.assertRaises(ValueError, f.device_types, 'blackberry')
 
     def test_device_type(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
         f.device_types('ios')
         self.assertEqual(f.filters['device_types'], ['ios'])
 
@@ -21,7 +21,7 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(f.filters['device_types'], ['ios', 'android', 'amazon'])
 
     def test_invalid_event_type(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
 
         self.assertRaises(ValueError, f.types)
 
@@ -30,7 +30,7 @@ class TestFilter(unittest.TestCase):
         f.types('FUTURE_EVENT')
 
     def test_event_type(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
         f.types('OPEN')
         self.assertEqual(f.filters['types'], ['OPEN'])
 
@@ -41,17 +41,17 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(f.filters['types'], ['OPEN'])
 
     def test_latency(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
         f.latency(10000)
         self.assertEqual(f.filters['latency'], 10000)
 
     def test_invalid_notifications(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
         self.assertRaises(ValueError, f.notifications)
         self.assertRaises(ValueError, f.notifications, push_id='1234', group_id='5678')
 
     def test_notifications(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
         f.notifications(push_id='1234')
         self.assertEqual(f.filters['notifications'], {'push_id': '1234'})
 
@@ -59,11 +59,11 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(f.filters['notifications'], {'group_id': '1234'})
 
     def test_invalid_devices(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
         self.assertRaises(ValueError, f.devices)
 
     def test_devices(self):
-        f = eaglecreek.Filter()
+        f = uaconnect.Filter()
 
         f.devices(ios_channel='1234')
         self.assertEqual(f.filters['devices'], [{'ios_channel': '1234'}])

@@ -7,9 +7,9 @@ import time
 
 import requests
 
-logger = logging.getLogger("eaglecreek")
+logger = logging.getLogger("uaconnect")
 
-EC_URL = 'https://connect.urbanairship.com/api/events/'
+CONNECT_URL = 'https://connect.urbanairship.com/api/events/'
 
 
 class AirshipFailure(Exception):
@@ -152,7 +152,7 @@ class Consumer(object):
         if url is not None:
             self.url = url
         else:
-            self.url = EC_URL
+            self.url = CONNECT_URL
         self.outstanding = collections.OrderedDict()
         self.connection = Connection(app_key, self.url)
         self.filters = []

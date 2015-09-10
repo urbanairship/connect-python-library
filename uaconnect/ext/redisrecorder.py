@@ -1,7 +1,7 @@
-import eaglecreek
+import uaconnect
 import redis
 
-class RedisRecorder(eaglecreek.Recorder):
+class RedisRecorder(uaconnect.Recorder):
     redisargs = None
     key = None
 
