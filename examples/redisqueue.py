@@ -26,6 +26,10 @@ logging.getLogger('uaconnect').setLevel(logging.INFO)
 def consume(key, token, types):
     redisconn = redis.StrictRedis()
     consumer = uaconnect.Consumer(key, token, redisrecorder.RedisRecorder('uaconnect-offset'))
+    if types:
+        f = uaconnect.Filter()
+        f.types(*types.split(','))
+        consumer.add_filter(f)
     consumer.connect()
 
     def shutdown_handler(signum, frame):
@@ -46,7 +50,9 @@ if __name__ == '__main__':
     parser.add_argument('token', type=str, help='Access Token')
     parser.add_argument('-v', '--verbose', dest='verbose',
         default=False, action='store_true', help='Log extra information')
-    parser.add_argument('--types', dest='types', action='append', help='Process only these event types')
+    parser.add_argument('--types', type=str,
+        help='Comma separated list of event types to store, as a '
+            'comma separated list.')
 
     args = parser.parse_args()
     if args.verbose:
