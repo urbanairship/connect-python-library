@@ -39,3 +39,39 @@ class TestFilter(unittest.TestCase):
 
         f.types('open')
         self.assertEqual(f.filters['types'], ['OPEN'])
+
+    def test_latency(self):
+        f = eaglecreek.Filter()
+        f.latency(10000)
+        self.assertEqual(f.filters['latency'], 10000)
+
+    def test_invalid_notifications(self):
+        f = eaglecreek.Filter()
+        self.assertRaises(ValueError, f.notifications)
+        self.assertRaises(ValueError, f.notifications, push_id='1234', group_id='5678')
+
+    def test_notifications(self):
+        f = eaglecreek.Filter()
+        f.notifications(push_id='1234')
+        self.assertEqual(f.filters['notifications'], {'push_id': '1234'})
+
+        f.notifications(group_id='1234')
+        self.assertEqual(f.filters['notifications'], {'group_id': '1234'})
+
+    def test_invalid_devices(self):
+        f = eaglecreek.Filter()
+        self.assertRaises(ValueError, f.devices)
+
+    def test_devices(self):
+        f = eaglecreek.Filter()
+
+        f.devices(ios_channel='1234')
+        self.assertEqual(f.filters['devices'], [{'ios_channel': '1234'}])
+
+        f.devices(android_channel=['1234', '5678'])
+        self.assertEqual(f.filters['devices'],
+            [{'android_channel': '1234'}, {'android_channel': '5678'}])
+
+        f.devices(amazon_channel='1234', named_user_id='fred')
+        self.assertEqual(f.filters['devices'],
+            [{'amazon_channel': '1234'}, {'named_user_id': 'fred'}])
