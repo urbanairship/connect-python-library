@@ -140,7 +140,7 @@ class Consumer(object):
     url = None
     connection = None
     outstanding = None
-    stop = False
+    _stop = False
     offset_filename = '.offset'
     offset = 'LATEST'
     filters = None
@@ -198,7 +198,8 @@ class Consumer(object):
             self.connection.connect(self.access_token, self.filters, start='LATEST')
 
     def read(self):
-        while not self.stop:
+        self._stop = False
+        while not self._stop:
             try:
                 line = next(self.connection.stream)
                 if not line:
@@ -213,6 +214,9 @@ class Consumer(object):
                     StopIteration):
                 self.connection.close()
                 self.connection.connect(self.access_token, resume_offset=self.offset)
+
+    def stop(self):
+        self._stop = True
 
     def add_filter(self, filter_):
         self.filters.append(filter_.filters)
