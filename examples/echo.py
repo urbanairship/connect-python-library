@@ -1,13 +1,14 @@
 import logging
 logging.basicConfig()
 
-import eaglecreek
+import uaconnect
 
-logging.getLogger('eaglecreek').setLevel(logging.DEBUG)
+logging.getLogger('uaconnect').setLevel(logging.DEBUG)
 
-key, secret = "<app key>", "<master secret>"
+app_key = '<app key>'
+access_token = '<token>'
 
-consumer = eaglecreek.Consumer(key, secret, eaglecreek.FileRecorder('.offset'))
+consumer = uaconnect.Consumer(app_key, access_token, uaconnect.FileRecorder('.offset'))
 consumer.connect()
 for event in consumer.read():
     if event is None:
