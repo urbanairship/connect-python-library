@@ -12,6 +12,14 @@ logger = logging.getLogger("uaconnect")
 CONNECT_URL = 'https://connect.urbanairship.com/api/events/'
 
 
+class ConnectionError(Exception):
+    """Raised when no connection can be established.
+
+    The Connection class will attempt to retry, and will issue this exception
+    if retries continue to fail.
+    """
+
+
 class AirshipFailure(Exception):
     """Raised when we get an error response from the server.
 
@@ -122,8 +130,8 @@ class Connection(object):
                 attempts = 0
                 break
             except requests.exceptions.ConnectionError:
-                if attempts > 10:
-                    raise Exception("Unable to connect after [%s] attempts, giving up" % attempts)
+                if attempts > 9:
+                    raise ConnectionError("Unable to connect after [%s] attempts, giving up" % attempts)
                 logging.info("Connection failed, retrying [%s]", attempts)
                 time.sleep(backoff)
                 backoff += backoff * attempts
