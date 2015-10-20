@@ -1,3 +1,15 @@
+import sys
+
+# Python coarse version differentiation
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+# Set version string type
+if PY3:
+    string_type = str
+elif PY2:
+    string_type = basestring
+
 class Filter(object):
     def __init__(self):
         self.filters = {}
@@ -67,22 +79,22 @@ class Filter(object):
 
         devices = []
 
-        if isinstance(ios_channel, basestring):
+        if isinstance(ios_channel, string_type):
             devices.append({'ios_channel': ios_channel})
         elif ios_channel:
             devices.extend({'ios_channel': c} for c in ios_channel)
 
-        if isinstance(android_channel, basestring):
+        if isinstance(android_channel, string_type):
             devices.append({'android_channel': android_channel})
         elif android_channel:
             devices.extend({'android_channel': c} for c in android_channel)
 
-        if isinstance(amazon_channel, basestring):
+        if isinstance(amazon_channel, string_type):
             devices.append({'amazon_channel': amazon_channel})
         elif amazon_channel:
             devices.extend({'amazon_channel': c} for c in amazon_channel)
 
-        if isinstance(named_user_id, basestring):
+        if isinstance(named_user_id, string_type):
             devices.append({'named_user_id': named_user_id})
         elif named_user_id:
             devices.extend({'named_user_id': c} for c in named_user_id)

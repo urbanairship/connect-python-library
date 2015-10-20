@@ -1,3 +1,4 @@
+import codecs
 import collections
 import json
 import logging
@@ -255,7 +256,7 @@ class Event(object):
     def from_json(cls, payload):
         event = cls()
         event.raw = payload
-        event.data = json.loads(payload)
+        event.data = json.loads(payload.decode('utf8'))
         event.id = event.data['id']
         event.event_type = event.data['type']
         event.offset = event.data['offset']

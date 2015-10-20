@@ -1,7 +1,10 @@
 import json
 import unittest
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from uaconnect import consumer
 
@@ -69,5 +72,5 @@ class TestConsumer(unittest.TestCase):
                 # Ensure while reconnecting we got to the max backoff
                 sleep.assert_called_with(10)
                 # Check that we retried 10 times
-                self.assertEqual(sleep.call_count, 10)
+                self.assertEqual(sleep.call_count, 9)
 
