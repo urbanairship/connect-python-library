@@ -1,14 +1,8 @@
 import sys
 
-# Python coarse version differentiation
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
+# PY2/3 compat
+string_type = str if (sys.version_info[0] == 3) else basestring
 
-# Set version string type
-if PY3:
-    string_type = str
-elif PY2:
-    string_type = basestring
 
 class Filter(object):
     def __init__(self):
