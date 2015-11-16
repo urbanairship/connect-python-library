@@ -22,7 +22,7 @@ details.
 Basic usage
 -----------
 
-To use the library, instantiate a `Consumer` object with the application key,
+To use the library, instantiate a ``Consumer`` object with the application key,
 access token, and an offset recorder. You can then open the connection, and
 start reading events.
 
@@ -41,8 +41,13 @@ start reading events.
 Offset recorders
 ----------------
 
-Offset recorders inherit from the abstract base class `uaconnect.Recorder`,
-implementing `read_offset` and `write_offset` methods. One recorder is included
-in the library, `FileRecorder`, which stores the offest on disk. In the
-`uaconnect.ext.redisrecorder` package there is an example implementation of
+Offset recorders inherit from the abstract base class ``uaconnect.Recorder``,
+implementing ``read_offset`` and ``write_offset`` methods. One recorder is included
+in the library, ``FileRecorder``, which stores the offest on disk. In the
+``uaconnect.ext.redisrecorder`` package there is an example implementation of
 using an Redis instance to store the offset. 
+
+`ack` calls should be placed depending on whether in a failure scenario your
+app wishes to possibly replay an already handled event, or risk dropping one.
+For the latter, call ``ack`` as soon as the event is read; for the former, call
+``ack`` only after the event has been fully handled.

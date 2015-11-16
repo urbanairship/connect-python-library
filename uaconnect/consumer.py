@@ -71,14 +71,19 @@ class AirshipFailure(Exception):
 
 
 class Connection(object):
+    """Internal class used to wrap connections"""
+
+    app_key = None
+    access_token = None
     stream = None
     _conn = None
     stop = False
     url = None
     cookies = None
 
-    def __init__(self, app_key, url):
+    def __init__(self, app_key, access_token, url):
         self.app_key = app_key
+        self.access_token = access_token
         self.url = url
 
     def close(self):
@@ -87,8 +92,8 @@ class Connection(object):
         self._conn = None
         self.stream = None
 
-    def _headers(self, access_token):
-        auth = 'Bearer %s' % access_token
+    def _headers(self):
+        auth = 'Bearer %s' % self.access_token
         headers = {
             'Authorization': auth,
             'Accept': 'application/vnd.urbanairship+x-ndjson; version=3;',
@@ -97,7 +102,7 @@ class Connection(object):
         }
         return headers
 
-    def connect(self, access_token, filters, resume_offset=None, start=None):
+    def connect(self, filters, resume_offset=None, start=None):
         logger.info("Opening connection to %s, offset %s", self.url,
             resume_offset or start)
 
@@ -119,7 +124,7 @@ class Connection(object):
 
             try:
                 self._conn = requests.post(self.url, data=body,
-                        headers=self._headers(access_token), stream=True,
+                        headers=self._headers(), stream=True,
                         cookies=self.cookies)
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
@@ -143,6 +148,8 @@ class Connection(object):
 
 
 class Consumer(object):
+    """UA Connect consumer object."""
+
     app_key = None
     access_token = None
     recorder = None
@@ -163,10 +170,10 @@ class Consumer(object):
         else:
             self.url = CONNECT_URL
         self.outstanding = collections.OrderedDict()
-        self.connection = Connection(app_key, self.url)
+        self.connection = Connection(app_key, access_token, self.url)
         self.filters = []
 
-    def record(self, event):
+    def _record(self, event):
         self.outstanding[event.offset] = event
 
     def ack(self, event):
@@ -200,13 +207,21 @@ class Consumer(object):
             self.offset = last
 
     def connect(self):
+        """Connect to the stream using the given filters and offset/start."""
         self.offset = self.recorder.read_offset()
         if self.offset:
-            self.connection.connect(self.access_token, self.filters, resume_offset=self.offset)
+            self.connection.connect(self.access_token, self.filters,
+                resume_offset=self.offset)
         else:
-            self.connection.connect(self.access_token, self.filters, start='LATEST')
+            self.connection.connect(self.access_token, self.filters,
+                start='LATEST')
 
     def read(self):
+        """Read the stream and yield each event as it is streamed.
+
+        This function can yield a None, so that a caller can perform periodic
+        actions during slow times.
+        """
         self._stop = False
         while not self._stop:
             try:
@@ -217,7 +232,7 @@ class Consumer(object):
                     continue
                 logger.debug("Received entry: %s", line)
                 e = Event.from_json(line)
-                self.record(e)
+                self._record(e)
                 yield e
             except (requests.exceptions.ConnectionError,
                     StopIteration):
@@ -225,30 +240,21 @@ class Consumer(object):
                 self.connection.connect(self.access_token, resume_offset=self.offset)
 
     def stop(self):
+        """Instruct the consumer to stop and close the connection cleanly."""
         self._stop = True
 
     def add_filter(self, filter_):
+        """Add a ``uaconnect.Filter`` to the stream.
+
+        To reconnect with a new filter the consumer must be `close()`ed and
+        then reconnected.
+
+        """
         self.filters.append(filter_.filters)
 
 
 class Event(object):
-    """
-
-    Example: 
-        {
-            "id": "9d52a079-3489-11e5-8c24-90e2ba02f390",
-            "type": "REGION",
-            "offset": "44408",
-            "occurred": "2015-07-27T18: 02: 14.856Z",
-            "processed": "2015-07-27T18: 02: 17.378Z",
-            "device": {"ios_channel": "3ecf597f-de80-43b7-96cf-f56476ea15df"},
-            "body": {
-                "action": "exit",
-                "region_id": "8d2f7d00-271c-4737-a0c3-1a7700cf885d",
-                "source": "Gimbal",
-                "session_id": "9649384b-a893-48bf-a564-45d183cd5544"}
-            }
-    """
+    """An event returned from Connect."""
 
     __slots__ = ('raw', 'data', 'id', 'device', 'event_type', 'offset')
 
