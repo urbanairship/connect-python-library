@@ -1,4 +1,4 @@
-"""Eagle Creek offset recorder
+"""UA Connect offset recorder
 
 Used to maintain the current state of the stream.
 

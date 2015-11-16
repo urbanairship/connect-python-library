@@ -1,6 +1,6 @@
 from setuptools import setup
 
 setup(
-    name='Eagle Creek',
-    packages=['eaglecreek', 'eaglecreek.ext'],
+    name='Urban Airship Connect',
+    packages=['uaconnect', 'uaconnect.ext'],
 )
