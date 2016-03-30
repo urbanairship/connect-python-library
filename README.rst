@@ -10,6 +10,15 @@ Requirements
 
 Tested on Python 2.7 and 3.5, and should work with 3.3+.
 
+For tests, ``uaconnect`` also needs `Mock <https://github.com/testing-cabal/mock>`_.
+
+Running Tests
+=============
+
+To run tests, run:
+
+    $ python -m unittest discover
+
 Usage
 =====
 
@@ -45,7 +54,7 @@ Offset recorders inherit from the abstract base class ``uaconnect.Recorder``,
 implementing ``read_offset`` and ``write_offset`` methods. One recorder is included
 in the library, ``FileRecorder``, which stores the offest on disk. In the
 ``uaconnect.ext.redisrecorder`` package there is an example implementation of
-using an Redis instance to store the offset. 
+using an Redis instance to store the offset.
 
 `ack` calls should be placed depending on whether in a failure scenario your
 app wishes to possibly replay an already handled event, or risk dropping one.
