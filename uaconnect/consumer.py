@@ -210,10 +210,10 @@ class Consumer(object):
         """Connect to the stream using the given filters and offset/start."""
         self.offset = self.recorder.read_offset()
         if self.offset:
-            self.connection.connect(self.access_token, self.filters,
+            self.connection.connect(self.filters,
                 resume_offset=self.offset)
         else:
-            self.connection.connect(self.access_token, self.filters,
+            self.connection.connect(self.filters,
                 start='LATEST')
 
     def read(self):
