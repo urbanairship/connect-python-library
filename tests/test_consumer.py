@@ -43,9 +43,9 @@ class TestConsumer(unittest.TestCase):
             # the 307
             post.assert_has_calls([
                 mock.call('url', data=payload,
-                    headers={'auth': 'fake'}, stream=True, cookies=None),
+                    headers={'auth': 'fake'}, stream=True, cookies=None, proxies=None),
                 mock.call('url', data=payload,
-                    headers={'auth': 'fake'}, stream=True, cookies={'foo': 'bar'}),
+                    headers={'auth': 'fake'}, stream=True, cookies={'foo': 'bar'}, proxies=None),
             ])
 
     def test_connect_failure_retry(self):
