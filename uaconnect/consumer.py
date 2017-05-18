@@ -126,7 +126,7 @@ class Connection(object):
             try:
                 self._conn = requests.post(self.url, data=body,
                         headers=self._headers(), stream=True,
-                        cookies=self.cookies)
+                        cookies=self.cookies, proxies=self.proxies)
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
                     self.cookies = self._conn.cookies
