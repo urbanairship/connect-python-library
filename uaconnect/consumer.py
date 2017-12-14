@@ -206,15 +206,16 @@ class Consumer(object):
             self.recorder.write_offset(last)
             self.offset = last
 
-    def connect(self):
+    def connect(self, resume_offset=None):
         """Connect to the stream using the given filters and offset/start."""
-        self.offset = self.recorder.read_offset()
-        if self.offset:
-            self.connection.connect(self.filters,
-                resume_offset=self.offset)
+        if resume_offset:
+            self.offset = resume_offset
         else:
-            self.connection.connect(self.filters,
-                start='LATEST')
+            self.offset = self.recorder.read_offset()
+        if self.offset:
+            self.connection.connect(self.filters, resume_offset=self.offset)
+        else:
+            self.connection.connect(self.filters, start='LATEST')
 
     def read(self):
         """Read the stream and yield each event as it is streamed.
