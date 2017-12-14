@@ -92,6 +92,11 @@ whatever ``Recorder`` subclass you're using to track offsets.
 
 Now, the next time you connect, it will pick up from that last offset.
 
+If you'd like to manually set the offset for a connection to a known value
+instead of the recorder's offset, set ``resume_offset`` like so:
+
+    >>> consumer.connect(resume_offset='123456789')
+
 Using filters
 -------------
 
