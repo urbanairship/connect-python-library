@@ -15,7 +15,7 @@ Please include link to open issue if applicable.
 - [ ] 3.6
 - [ ] 3.7
 
-### Urban Airship Contribution Agreement
+### Airship Contribution Agreement
 [Link here](https://docs.google.com/forms/d/e/1FAIpQLScErfiz-fXSPpVZ9r8Di2Tr2xDFxt5MgzUel0__9vqUgvko7Q/viewform)
 
 - [ ] I've filled out and signed UA's contribution agreement form

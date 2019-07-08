@@ -30,4 +30,4 @@ Before completing the form below, please check the following:
 
 ## Possible Fix
 <!--- Not required, but suggest your possible solution if possible. -->
-<!--  If your fix is known to work, we accept pull requests with a completed contribution agreement. -->%
+<!--  If your fix is known to work, we accept pull requests with a completed contribution agreement. -->
