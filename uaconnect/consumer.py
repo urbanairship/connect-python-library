@@ -81,10 +81,11 @@ class Connection(object):
     url = None
     cookies = None
 
-    def __init__(self, app_key, access_token, url):
+    def __init__(self, app_key, access_token, url, proxies=None):
         self.app_key = app_key
         self.access_token = access_token
         self.url = url
+        self.proxies = proxies
 
     def close(self):
         if not self._conn.raw.closed:
@@ -125,7 +126,7 @@ class Connection(object):
             try:
                 self._conn = requests.post(self.url, data=body,
                         headers=self._headers(), stream=True,
-                        cookies=self.cookies)
+                        cookies=self.cookies, proxies=self.proxies)
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
                     self.cookies = self._conn.cookies
@@ -161,7 +162,7 @@ class Consumer(object):
     offset = 'LATEST'
     filters = None
 
-    def __init__(self, app_key, access_token, recorder, url=None):
+    def __init__(self, app_key, access_token, recorder, url=None, proxies=None):
         self.app_key = app_key
         self.access_token = access_token
         self.recorder = recorder
@@ -170,7 +171,7 @@ class Consumer(object):
         else:
             self.url = CONNECT_URL
         self.outstanding = collections.OrderedDict()
-        self.connection = Connection(app_key, access_token, self.url)
+        self.connection = Connection(app_key, access_token, self.url, proxies=proxies)
         self.filters = []
 
     def _record(self, event):
