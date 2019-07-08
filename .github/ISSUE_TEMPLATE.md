@@ -1,11 +1,11 @@
 We only accept issues for bug reporting purposes.
 
-**All feature requests, implementation concerns or general queries should be sent to our [support team](https://support.urbanairship.com/).**
+**All feature requests, implementation concerns or general queries should be sent to our [support team](https://support.airship.com/).**
 
 Before completing the form below, please check the following:
 
 - [ ] You are using the most recent version of the library.
-- [ ] You are using a supported version of Ruby for that library version.
+- [ ] You are using a supported version of Python for that library version.
 - [ ] This issue is reproducible.
 
 ## Expected Behavior
@@ -30,4 +30,4 @@ Before completing the form below, please check the following:
 
 ## Possible Fix
 <!--- Not required, but suggest your possible solution if possible. -->
-<!--  If your fix is known to work, we accept pull requests with a completed contribution agreement. -->
+<!--  If your fix is known to work, we accept pull requests with a completed contribution agreement. -->%
