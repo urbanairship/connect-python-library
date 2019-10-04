@@ -36,16 +36,17 @@ class TestConsumer(unittest.TestCase):
 
         # First connection returns a 307 with cookies, second returns a 200
         with mock.patch('uaconnect.consumer.requests.post',
-                side_effect=[redir_conn, good_conn]) as post:
+                        side_effect=[redir_conn, good_conn]) as post:
             c.connect(None)
 
             # Ensure no cookies the first time, then send cookies returned in
             # the 307
             post.assert_has_calls([
                 mock.call('url', data=payload,
-                    headers={'auth': 'fake'}, stream=True, cookies=None),
+                          headers={'auth': 'fake'}, stream=True, cookies=None),
                 mock.call('url', data=payload,
-                    headers={'auth': 'fake'}, stream=True, cookies={'foo': 'bar'}),
+                          headers={'auth': 'fake'},
+                          stream=True, cookies={'foo': 'bar'}),
             ])
 
     def test_connect_failure_retry(self):
@@ -56,7 +57,8 @@ class TestConsumer(unittest.TestCase):
 
         with mock.patch('uaconnect.consumer.time.sleep') as sleep:
             with mock.patch('uaconnect.consumer.requests.post',
-                    side_effect=[consumer.requests.exceptions.ConnectionError(), conn]):
+                            side_effect=[consumer.requests.exceptions
+                                         .ConnectionError(), conn]):
                 c.connect(None)
 
                 sleep.assert_called_with(0.1)
@@ -66,17 +68,18 @@ class TestConsumer(unittest.TestCase):
 
         with mock.patch('uaconnect.consumer.time.sleep') as sleep:
             with mock.patch('uaconnect.consumer.requests.post',
-                    side_effect=consumer.requests.exceptions.ConnectionError()):
+                            side_effect=consumer.requests
+                            .exceptions.ConnectionError()):
                 self.assertRaises(consumer.ConnectionError, c.connect, None)
 
                 # Ensure while reconnecting we got to the max backoff
                 sleep.assert_called_with(10)
                 # Check that we retried 10 times
                 self.assertEqual(sleep.call_count, 9)
-    
+
     def test_connect_resume_offset(self):
         c = consumer.Connection('key', 'token', 'url')
-        
+
         c.filters = {}
         conn = mock.Mock()
         conn.status_code = 200
@@ -84,3 +87,47 @@ class TestConsumer(unittest.TestCase):
         with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
             c.connect(c.filters, resume_offset='123456789')
             self.assertEqual(c.body, '{"resume_offset": "123456789"}')
+
+    def test_connect_start_earliest(self):
+        c = consumer.Connection('key', 'token', 'url')
+
+        c.filters = {}
+        conn = mock.Mock()
+        conn.status_code = 200
+
+        with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
+            c.connect(c.filters, start='EARLIEST')
+            self.assertEqual(c.body, '{"start": "EARLIEST"}')
+
+    def test_connect_start_latest(self):
+        c = consumer.Connection('key', 'token', 'url')
+
+        c.filters = {}
+        conn = mock.Mock()
+        conn.status_code = 200
+
+        with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
+            c.connect(c.filters, start='LATEST')
+            self.assertEqual(c.body, '{"start": "LATEST"}')
+
+    def test_connect_start_invalid_input(self):
+        c = consumer.Connection('key', 'token', 'url')
+
+        c.filters = {}
+        conn = mock.Mock()
+        conn.status_code = 200
+
+        with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
+            c.connect(c.filters, start='sp39jd')
+            self.assertEqual(c.body, '{"start": "sp39jd"}')
+
+    def test_connect_start_and_resume_offset_error(self):
+        c = consumer.Connection('key', 'token', 'url')
+
+        c.filters = {}
+        conn = mock.Mock()
+        conn.status_code = 200
+
+        with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
+            c.connect(c.filters, start='sp39jd')
+            self.assertEqual(c.body, '{"start": "sp39jd"}')

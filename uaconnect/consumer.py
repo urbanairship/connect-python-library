@@ -1,9 +1,6 @@
-import codecs
 import collections
 import json
 import logging
-import os
-import select
 import time
 
 import requests
@@ -104,7 +101,7 @@ class Connection(object):
 
     def connect(self, filters, resume_offset=None, start=None):
         logger.info("Opening connection to %s, offset %s", self.url,
-            resume_offset or start)
+                    resume_offset or start)
 
         backoff = 0.1
         attempts = 0
@@ -112,6 +109,7 @@ class Connection(object):
         while not self.stop:
             attempts += 1
             payload = {}
+            print(resume_offset)
             if resume_offset:
                 payload['resume_offset'] = resume_offset
             elif start:
@@ -121,11 +119,11 @@ class Connection(object):
             if filters:
                 payload['filters'] = filters
             self.body = json.dumps(payload)
-
             try:
                 self._conn = requests.post(self.url, data=self.body,
-                        headers=self._headers(), stream=True,
-                        cookies=self.cookies)
+                                           headers=self._headers(),
+                                           stream=True,
+                                           cookies=self.cookies)
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
                     self.cookies = self._conn.cookies
@@ -137,7 +135,8 @@ class Connection(object):
                 break
             except requests.exceptions.ConnectionError:
                 if attempts > 9:
-                    raise ConnectionError("Unable to connect after [%s] attempts, giving up" % attempts)
+                    raise ConnectionError("Unable to connect after [%s]" +
+                                          "attempts, giving up" % attempts)
                 logging.info("Connection failed, retrying [%s]", attempts)
                 time.sleep(backoff)
                 backoff += backoff * attempts
@@ -183,7 +182,8 @@ class Consumer(object):
 
         # check that offset is in outstanding
         if offset not in self.outstanding:
-            raise ValueError("Received ack for unknown event offset {}".format(offset))
+            raise ValueError("Received ack for unknown event offset {}"
+                             .format(offset))
         last = None
 
         if offset == next(iter(self.outstanding)):
@@ -239,7 +239,8 @@ class Consumer(object):
             except (requests.exceptions.ConnectionError,
                     StopIteration):
                 self.connection.close()
-                self.connection.connect(self.access_token, resume_offset=self.offset)
+                self.connection.connect(self.access_token,
+                                        resume_offset=self.offset)
 
     def stop(self):
         """Instruct the consumer to stop and close the connection cleanly."""
@@ -273,4 +274,4 @@ class Event(object):
 
     def __repr__(self):
         return "<Event {} {} [{}]>".format(self.event_type, self.id,
-            self.offset)
+                                           self.offset)
