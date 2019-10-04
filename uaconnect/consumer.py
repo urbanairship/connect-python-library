@@ -120,10 +120,10 @@ class Connection(object):
                 payload['start'] = 'LATEST'
             if filters:
                 payload['filters'] = filters
-            body = json.dumps(payload)
+            self.body = json.dumps(payload)
 
             try:
-                self._conn = requests.post(self.url, data=body,
+                self._conn = requests.post(self.url, data=self.body,
                         headers=self._headers(), stream=True,
                         cookies=self.cookies)
                 if self._conn.status_code == 307:
@@ -206,12 +206,13 @@ class Consumer(object):
             self.recorder.write_offset(last)
             self.offset = last
 
-    def connect(self, resume_offset=None):
+    def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
         if resume_offset:
             self.offset = resume_offset
         else:
             self.offset = self.recorder.read_offset()
+
         if self.offset:
             self.connection.connect(self.filters, resume_offset=self.offset)
         else:

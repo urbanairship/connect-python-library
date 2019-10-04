@@ -73,4 +73,14 @@ class TestConsumer(unittest.TestCase):
                 sleep.assert_called_with(10)
                 # Check that we retried 10 times
                 self.assertEqual(sleep.call_count, 9)
+    
+    def test_connect_resume_offset(self):
+        c = consumer.Connection('key', 'token', 'url')
+        
+        c.filters = {}
+        conn = mock.Mock()
+        conn.status_code = 200
 
+        with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
+            c.connect(c.filters, resume_offset='123456789')
+            self.assertEqual(c.body, '{"resume_offset": "123456789"}')
