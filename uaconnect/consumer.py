@@ -1,5 +1,5 @@
-import collections
 import json
+import collections
 import logging
 import time
 
@@ -8,6 +8,13 @@ import requests
 logger = logging.getLogger("uaconnect")
 
 CONNECT_URL = 'https://connect.urbanairship.com/api/events/'
+
+
+class InvalidParametersError(Exception):
+    """Raised when request is malformed. Includes both the 'resume_offset' and 'start' params.
+
+    The request will be canceled and not sent to the server.
+    """
 
 
 class ConnectionError(Exception):
@@ -109,12 +116,20 @@ class Connection(object):
         while not self.stop:
             attempts += 1
             payload = {}
-            if resume_offset:
+            if resume_offset and start is None:
                 payload['resume_offset'] = resume_offset
-            elif start:
+            elif start == 'EARLIEST' or start == 'LATEST' and resume_offset is None:
                 payload['start'] = start
-            else:
+            elif start and resume_offset:
+                raise InvalidParametersError
+                logging.error("Request can only have start or resume_offset parameter")
+                self.stop
+            elif start is None and resume_offset is None:
                 payload['start'] = 'LATEST'
+            else:
+                raise InvalidParametersError
+                logging.error("Start can only be one of EARLIEST or LATEST")
+                self.stop
             if filters:
                 payload['filters'] = filters
             self.body = json.dumps(payload)
@@ -157,7 +172,7 @@ class Consumer(object):
     outstanding = None
     _stop = False
     offset_filename = '.offset'
-    offset = 'LATEST'
+    offset = None
     filters = None
 
     def __init__(self, app_key, access_token, recorder, url=None):
@@ -208,13 +223,23 @@ class Consumer(object):
 
     def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
-        if resume_offset:
+        if resume_offset and start is None:
             self.offset = resume_offset
+        elif start == 'EARLIEST' or start == 'LATEST' and resume_offset is None:
+            self.start = start
+        elif start and resume_offset:
+            raise InvalidParametersError
+            logging.error("Request can only have start or resume_offset parameter")
+        elif start:
+            raise InvalidParametersError
+            logging.error("Start can only be one of EARLIEST or LATEST")
         else:
             self.offset = self.recorder.read_offset()
 
         if self.offset:
             self.connection.connect(self.filters, resume_offset=self.offset)
+        elif self.start:
+            self.connection.connect(self.filters, start=self.start)
         else:
             self.connection.connect(self.filters, start='LATEST')
 

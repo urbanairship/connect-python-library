@@ -114,20 +114,21 @@ class TestConsumer(unittest.TestCase):
         c = consumer.Connection('key', 'token', 'url')
 
         c.filters = {}
-        conn = mock.Mock()
-        conn.status_code = 200
 
-        with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
-            c.connect(c.filters, start='sp39jd')
-            self.assertEqual(c.body, '{"start": "sp39jd"}')
+        with mock.patch('uaconnect.consumer.requests.post',
+                        side_effect=consumer.requests.exceptions
+                        .ConnectionError()):
+            self.assertRaises(consumer.InvalidParametersError, c.connect,
+                              c.filters, start='sdfs3')
 
     def test_connect_start_and_resume_offset_error(self):
         c = consumer.Connection('key', 'token', 'url')
 
         c.filters = {}
-        conn = mock.Mock()
-        conn.status_code = 200
 
-        with mock.patch('uaconnect.consumer.requests.post', return_value=conn):
-            c.connect(c.filters, start='sp39jd')
-            self.assertEqual(c.body, '{"start": "sp39jd"}')
+        with mock.patch('uaconnect.consumer.requests.post',
+                        side_effect=consumer.requests.exceptions
+                        .ConnectionError()):
+            self.assertRaises(consumer.InvalidParametersError, c.connect,
+                              c.filters, start='LATEST',
+                              resume_offset='123456789')
