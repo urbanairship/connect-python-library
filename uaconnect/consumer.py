@@ -109,7 +109,6 @@ class Connection(object):
         while not self.stop:
             attempts += 1
             payload = {}
-            print(resume_offset)
             if resume_offset:
                 payload['resume_offset'] = resume_offset
             elif start:
@@ -135,8 +134,9 @@ class Connection(object):
                 break
             except requests.exceptions.ConnectionError:
                 if attempts > 9:
-                    raise ConnectionError("Unable to connect after [%s]" +
-                                          "attempts, giving up" % attempts)
+                    errorString = ("Unable to connect after [%s] attempts, "
+                                   "giving up" % attempts)
+                    raise ConnectionError(errorString)
                 logging.info("Connection failed, retrying [%s]", attempts)
                 time.sleep(backoff)
                 backoff += backoff * attempts

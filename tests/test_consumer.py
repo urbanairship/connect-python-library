@@ -68,8 +68,8 @@ class TestConsumer(unittest.TestCase):
 
         with mock.patch('uaconnect.consumer.time.sleep') as sleep:
             with mock.patch('uaconnect.consumer.requests.post',
-                            side_effect=consumer.requests
-                            .exceptions.ConnectionError()):
+                            side_effect=consumer.requests.exceptions
+                            .ConnectionError()):
                 self.assertRaises(consumer.ConnectionError, c.connect, None)
 
                 # Ensure while reconnecting we got to the max backoff
