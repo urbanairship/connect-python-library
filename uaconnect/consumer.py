@@ -116,14 +116,14 @@ class Connection(object):
         while not self.stop:
             attempts += 1
             payload = {}
-            if resume_offset and start is None:
-                payload['resume_offset'] = resume_offset
-            elif start == 'EARLIEST' or start == 'LATEST' and resume_offset is None:
-                payload['start'] = start
-            elif start and resume_offset:
+            if resume_offset and start: 
                 raise InvalidParametersError
                 logging.error("Request can only have start or resume_offset parameter")
                 self.stop
+            elif resume_offset:
+                payload['resume_offset'] = resume_offset
+            elif start == 'EARLIEST' or start == 'LATEST':
+                payload['start'] = start
             elif start is None and resume_offset is None:
                 payload['start'] = 'LATEST'
             else:
@@ -223,13 +223,13 @@ class Consumer(object):
 
     def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
-        if resume_offset and start is None:
-            self.offset = resume_offset
-        elif start == 'EARLIEST' or start == 'LATEST' and resume_offset is None:
-            self.start = start
-        elif start and resume_offset:
+        if start and resume_offset:
             raise InvalidParametersError
             logging.error("Request can only have start or resume_offset parameter")
+        elif resume_offset:
+            self.offset = resume_offset
+        elif start == 'EARLIEST' or start == 'LATEST':
+            self.start = start
         elif start:
             raise InvalidParametersError
             logging.error("Start can only be one of EARLIEST or LATEST")
