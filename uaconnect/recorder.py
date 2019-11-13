@@ -1,4 +1,4 @@
-"""UA Connect offset recorder
+"""Airship RTDS offset recorder
 
 Used to maintain the current state of the stream.
 

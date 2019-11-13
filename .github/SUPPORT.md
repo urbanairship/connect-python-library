@@ -7,4 +7,4 @@ You can contact them by visiting https://support.airship.com/
 # Documentation
 
 Documentation for the library can be found here:
-https://docs.airship.com/api/libraries/python/
+https://docs.airship.com/api/libraries/connect/python/

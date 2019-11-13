@@ -1,6 +1,6 @@
 """Redis Queue example
 
-This example script reads from the Urban Airship Connect stream, writing files
+This example script reads from the Airship RTDS stream, writing files
 into a Redis queue. Offsets are stored in Redis as well, using the included
 uaconnect.ext.redisrecorder module.
 
@@ -45,8 +45,8 @@ def consume(key, token, types):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Stream Urban Airship Connect events into Redis')
-    parser.add_argument('key', type=str, help='Urban Airship Application Key')
+    parser = argparse.ArgumentParser(description='Stream Airship RTDS events into Redis')
+    parser.add_argument('key', type=str, help='Airship Application Key')
     parser.add_argument('token', type=str, help='Access Token')
     parser.add_argument('-v', '--verbose', dest='verbose',
         default=False, action='store_true', help='Log extra information')
