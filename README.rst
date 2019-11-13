@@ -1,9 +1,14 @@
 About
 =====
 
-``uaconnect`` is a Python library for using the `Urban Airship Connect
-<https://www.urbanairship.com/products/connect>`_ API for streaming mobile
-event data to your application.
+``uaconnect`` is the official Python library for using the `Airship Real-Time Data Streaming
+<https://docs.airship.com/api/connect/>`_ API (formerly known as Connect).
+
+Questions
+=========
+
+The best place to ask questions or report a problem is our support site:
+http://support.airship.com/
 
 Requirements
 ============
@@ -22,11 +27,10 @@ To run tests, run:
 Usage
 =====
 
-See the `Connect Getting Started Guide
-<http://docs.urbanairship.com/topic-guides/connect-getting-started.html>`_, as
-well as the `Connect API
-<http://docs.urbanairship.com/topic-guides/connect-api.html>`_ for more
-details.
+See the `Real-Time Data Streaming Getting Started Guide
+<https://docs.airship.com/tutorials/getting-started/data-streaming/>`_, as
+well as the `Real-Time Data Streaming API docs
+<https://docs.airship.com/api/connect/>`_ for more details.
 
 Basic usage
 -----------
@@ -51,10 +55,10 @@ Offset recorders
 ----------------
 
 Offset recorders inherit from the abstract base class ``uaconnect.Recorder``,
-implementing ``read_offset`` and ``write_offset`` methods. One recorder is included
-in the library, ``FileRecorder``, which stores the offest on disk. In the
-``uaconnect.ext.redisrecorder`` package there is an example implementation of
-using an Redis instance to store the offset.
+implementing ``read_offset`` and ``write_offset`` methods. One recorder is
+included in the library, ``FileRecorder``, which stores the offest on disk. In
+the ``uaconnect.ext.redisrecorder`` package there is an example implementation
+of using an Redis instance to store the offset.
 
 `ack` calls should be placed depending on whether in a failure scenario your
 app wishes to possibly replay an already handled event, or risk dropping one.
@@ -64,16 +68,16 @@ For the latter, call ``ack`` as soon as the event is read; for the former, call
 Advanced options when connecting
 ================================
 
-Urban Airship Connect supports a variety of `options when connecting
-<http://docs.urbanairship.com/api/connect.html#stream-object>`_ to make sure
-that you're only consuming the data that you want. ``uaconnect`` makes it easy
-to use these connection parameters and filters.
+Airship Real-Time Data Streaming supports a variety of `options when connecting
+<https://docs.airship.com/api/connect/#operation/api/events/post/requestbody>`_
+to make sure that you're only consuming the data that you want. ``uaconnect``
+makes it easy to use these connection parameters and filters.
 
 Specifying offsets
 ------------------
 
-One of the advantages of Urban Airship Connect is that you can resume from a
-specific place in the Connect stream. This is done by specifying the ``offset``
+One of the advantages of Airship Real-Time Data Streaming is that you can resume from a
+specific place in the RTDS stream. This is done by specifying the ``offset``
 that's associated with the event. While ``uaconnect`` automatically tracks
 offsets for you with ``uaconnect.FileRecorder``, you can also explicitly set an
 offset.
@@ -96,11 +100,11 @@ Using filters
 -------------
 
 Filters are a powerful way of filtering what specific information you'd like to
-see from the Connect stream. You can filter by event type, device type, latency
+see from the RTDS stream. You can filter by event type, device type, latency
 on an event, or even specific devices or notifications.
 
 For a complete list of filters, and their descriptions, check out `the
-documentation <http://docs.urbanairship.com/api/connect.html#stream-object>`_.
+documentation <https://docs.airship.com/api/connect/#schemas/filters>`_.
 
 Here's a brief example on how to use filters with ``uaconnect``:
 
