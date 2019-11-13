@@ -1,9 +1,6 @@
-import codecs
-import collections
 import json
+import collections
 import logging
-import os
-import select
 import time
 
 import requests
@@ -11,6 +8,13 @@ import requests
 logger = logging.getLogger("uaconnect")
 
 CONNECT_URL = 'https://connect.urbanairship.com/api/events/'
+
+
+class InvalidParametersError(Exception):
+    """Raised when request is malformed. Includes both the 'resume_offset' and 'start' params.
+
+    The request will be canceled and not sent to the server.
+    """
 
 
 class ConnectionError(Exception):
@@ -104,7 +108,7 @@ class Connection(object):
 
     def connect(self, filters, resume_offset=None, start=None):
         logger.info("Opening connection to %s, offset %s", self.url,
-            resume_offset or start)
+                    resume_offset or start)
 
         backoff = 0.1
         attempts = 0
@@ -112,20 +116,28 @@ class Connection(object):
         while not self.stop:
             attempts += 1
             payload = {}
-            if resume_offset:
+            if resume_offset and start: 
+                raise InvalidParametersError
+                logging.error("Request can only have start or resume_offset parameter")
+                self.stop
+            elif resume_offset:
                 payload['resume_offset'] = resume_offset
-            elif start:
+            elif start == 'EARLIEST' or start == 'LATEST':
                 payload['start'] = start
-            else:
+            elif start is None and resume_offset is None:
                 payload['start'] = 'LATEST'
+            else:
+                raise InvalidParametersError
+                logging.error("Start can only be one of EARLIEST or LATEST")
+                self.stop
             if filters:
                 payload['filters'] = filters
-            body = json.dumps(payload)
-
+            self.body = json.dumps(payload)
             try:
-                self._conn = requests.post(self.url, data=body,
-                        headers=self._headers(), stream=True,
-                        cookies=self.cookies)
+                self._conn = requests.post(self.url, data=self.body,
+                                           headers=self._headers(),
+                                           stream=True,
+                                           cookies=self.cookies)
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
                     self.cookies = self._conn.cookies
@@ -137,7 +149,9 @@ class Connection(object):
                 break
             except requests.exceptions.ConnectionError:
                 if attempts > 9:
-                    raise ConnectionError("Unable to connect after [%s] attempts, giving up" % attempts)
+                    errorString = ("Unable to connect after [%s] attempts, "
+                                   "giving up" % attempts)
+                    raise ConnectionError(errorString)
                 logging.info("Connection failed, retrying [%s]", attempts)
                 time.sleep(backoff)
                 backoff += backoff * attempts
@@ -158,7 +172,7 @@ class Consumer(object):
     outstanding = None
     _stop = False
     offset_filename = '.offset'
-    offset = 'LATEST'
+    offset = None
     filters = None
 
     def __init__(self, app_key, access_token, recorder, url=None):
@@ -183,7 +197,8 @@ class Consumer(object):
 
         # check that offset is in outstanding
         if offset not in self.outstanding:
-            raise ValueError("Received ack for unknown event offset {}".format(offset))
+            raise ValueError("Received ack for unknown event offset {}"
+                             .format(offset))
         last = None
 
         if offset == next(iter(self.outstanding)):
@@ -206,15 +221,27 @@ class Consumer(object):
             self.recorder.write_offset(last)
             self.offset = last
 
-    def connect(self):
+    def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
-        self.offset = self.recorder.read_offset()
-        if self.offset:
-            self.connection.connect(self.filters,
-                resume_offset=self.offset)
+        if start and resume_offset:
+            raise InvalidParametersError
+            logging.error("Request can only have start or resume_offset parameter")
+        elif resume_offset:
+            self.offset = resume_offset
+        elif start == 'EARLIEST' or start == 'LATEST':
+            self.start = start
+        elif start:
+            raise InvalidParametersError
+            logging.error("Start can only be one of EARLIEST or LATEST")
         else:
-            self.connection.connect(self.filters,
-                start='LATEST')
+            self.offset = self.recorder.read_offset()
+
+        if self.offset:
+            self.connection.connect(self.filters, resume_offset=self.offset)
+        elif self.start:
+            self.connection.connect(self.filters, start=self.start)
+        else:
+            self.connection.connect(self.filters, start='LATEST')
 
     def read(self):
         """Read the stream and yield each event as it is streamed.
@@ -237,7 +264,8 @@ class Consumer(object):
             except (requests.exceptions.ConnectionError,
                     StopIteration):
                 self.connection.close()
-                self.connection.connect(self.access_token, resume_offset=self.offset)
+                self.connection.connect(self.access_token,
+                                        resume_offset=self.offset)
 
     def stop(self):
         """Instruct the consumer to stop and close the connection cleanly."""
@@ -271,4 +299,4 @@ class Event(object):
 
     def __repr__(self):
         return "<Event {} {} [{}]>".format(self.event_type, self.id,
-            self.offset)
+                                           self.offset)
