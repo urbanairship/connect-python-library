@@ -20,6 +20,9 @@ class TestFilter(unittest.TestCase):
         f.device_types('ios', 'android', 'amazon')
         self.assertEqual(f.filters['device_types'], ['ios', 'android', 'amazon'])
 
+        f.device_types('sms', 'email', 'open', 'web')
+        self.assertEqual(f.filters['device_types'], ['sms', 'email', 'open', 'web'])
+
     def test_invalid_event_type(self):
         f = uaconnect.Filter()
 
