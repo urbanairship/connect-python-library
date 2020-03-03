@@ -11,13 +11,13 @@ class Filter(object):
     def device_types(self, *types):
         """Filter by device type.
 
-        Valid device types are "ios", "android", and "amazon".
+        Valid device types are "ios", "android", "amazon", "sms", "email", "web", and "open".
 
         """
         if not types:
             raise ValueError("Must specify at least one device type")
         for t in types:
-            if t not in ('ios', 'android', 'amazon'):
+            if t not in ('ios', 'android', 'amazon', "sms", "email", "web", "open"):
                 raise ValueError("Invalid device type '%s'" % t)
         self.filters['device_types'] = list(types)
 
@@ -52,7 +52,7 @@ class Filter(object):
         else:
             self.filters['notifications'] = {'group_id': group_id}
 
-    def devices(self, ios_channel=None, android_channel=None,
+    def devices(self, channel=None, ios_channel=None, android_channel=None,
             amazon_channel=None, named_user_id=None):
         """Include events that are for this channel or named user.
 
@@ -60,6 +60,7 @@ class Filter(object):
         options can be used with either a single string or a sequence, e.g.:
 
         >>> filter_.devices(ios_channel='73757eeb-54cc-4337-84d7-484046e9f607')
+        >>> filter_.devices(channel='73757eeb-54cc-4337-84d7-484046e9f607')
         >>> filter_.devices(android_channel=[
         ...     '73757eeb-54cc-4337-84d7-484046e9f607',
         ...     'c76874b5-2e35-483b-a3a0-e05265f94260'])
@@ -68,10 +69,16 @@ class Filter(object):
         ...     android_channel='c76874b5-2e35-483b-a3a0-e05265f94260')
 
         """
-        if not (ios_channel or android_channel or amazon_channel or named_user_id):
+        if not (ios_channel or android_channel or amazon_channel or named_user_id or channel):
             raise ValueError("Must specify at least one device ID")
 
         devices = []
+
+        if isinstance(channel, string_type):
+            devices.append({'channel': channel})
+        elif channel:
+            devices.extend({'channel': c} for c in channel)
+
 
         if isinstance(ios_channel, string_type):
             devices.append({'ios_channel': ios_channel})
