@@ -12,7 +12,6 @@ US_BASE_URL = "https://connect.urbanairship.com/"
 EU_BASE_URL = "https://connect.asnapieu.com/"
 EVENT_PATH = "api/events"
 COMPLIANCE_PATH = "api/events/general"
-CONNECT_URL = "https://connect.urbanairship.com/api/events/"
 
 
 class InvalidParametersError(Exception):
