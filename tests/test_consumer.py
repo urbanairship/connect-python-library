@@ -1,10 +1,6 @@
 import json
 import unittest
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+import mock
 
 from uaconnect import consumer
 
@@ -152,3 +148,8 @@ class TestConsumer(unittest.TestCase):
                 start="LATEST",
                 resume_offset="123456789",
             )
+
+    def test_eu_events_url(self):
+        c = consumer.Connection("key", "token", url="eu")
+
+        self.assertEqual(c.url, "https://connect.asnapieu.com/api/events")
