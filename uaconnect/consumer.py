@@ -186,6 +186,7 @@ class Consumer(object):
     app_key = None
     access_token = None
     recorder = None
+    base_url = None
     url = None
     api_path = EVENT_PATH
     connection = None
