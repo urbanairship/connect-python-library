@@ -31,13 +31,13 @@ class FileRecorder(Recorder):
 
     def read_offset(self):
         if os.path.exists(self.filename):
-            f = open(self.filename, 'r')
+            f = open(self.filename, "r")
             offset = f.read().strip()
         else:
             offset = None
         return offset
 
     def write_offset(self, offset):
-        f = open(self.filename, 'w')
+        f = open(self.filename, "w")
         f.write(offset)
         f.close()

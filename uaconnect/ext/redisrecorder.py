@@ -1,6 +1,7 @@
 import uaconnect
 import redis
 
+
 class RedisRecorder(uaconnect.Recorder):
     redisargs = None
     key = None
