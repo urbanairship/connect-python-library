@@ -13,7 +13,7 @@ http://support.airship.com/
 Requirements
 ============
 
-Tested on Python 2.7 and 3.5, and should work with 3.3+.
+Tested on Python 3.6, 3.7, 3.9, and 3.9.
 
 For tests, ``uaconnect`` also needs `Mock <https://github.com/testing-cabal/mock>`_.
 
@@ -56,7 +56,7 @@ Offset recorders
 
 Offset recorders inherit from the abstract base class ``uaconnect.Recorder``,
 implementing ``read_offset`` and ``write_offset`` methods. One recorder is
-included in the library, ``FileRecorder``, which stores the offest on disk. In
+included in the library, ``FileRecorder``, which stores the offset on disk. In
 the ``uaconnect.ext.redisrecorder`` package there is an example implementation
 of using an Redis instance to store the offset.
 
