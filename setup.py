@@ -23,6 +23,6 @@ setup(
         "Topic :: Software Development :: Libraries",
     ],
     install_requires=[
-        "requests>=1.2",
+        "requests>=2.27",
     ],
 )
