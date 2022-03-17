@@ -150,6 +150,16 @@ class TestConsumer(unittest.TestCase):
             )
 
     def test_eu_events_url(self):
-        c = consumer.Connection("key", "token", url="eu")
+        c = consumer.Consumer("key", "token", "recorder", url="eu")
 
         self.assertEqual(c.url, "https://connect.asnapieu.com/api/events")
+
+    def test_default_us_base_url(self):
+        c = consumer.Consumer("key", "token", "recorder")
+
+        self.assertEqual(c.url, "https://connect.urbanairship.com/api/events")
+
+    def test_arbitrary_base_url(self):
+        c = consumer.Consumer("key", "token", "recorder", url="https://user-input.url/")
+
+        self.assertEqual(c.url, "https://user-input.url/api/events")
