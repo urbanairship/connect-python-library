@@ -1,9 +1,3 @@
-import sys
-
-# PY2/3 compat
-string_type = str if (sys.version_info[0] == 3) else basestring
-
-
 class Filter(object):
     def __init__(self):
         self.filters = {}
@@ -83,27 +77,27 @@ class Filter(object):
 
         devices = []
 
-        if isinstance(channel, string_type):
+        if isinstance(channel, str):
             devices.append({"channel": channel})
         elif channel:
             devices.extend({"channel": c} for c in channel)
 
-        if isinstance(ios_channel, string_type):
+        if isinstance(ios_channel, str):
             devices.append({"ios_channel": ios_channel})
         elif ios_channel:
             devices.extend({"ios_channel": c} for c in ios_channel)
 
-        if isinstance(android_channel, string_type):
+        if isinstance(android_channel, str):
             devices.append({"android_channel": android_channel})
         elif android_channel:
             devices.extend({"android_channel": c} for c in android_channel)
 
-        if isinstance(amazon_channel, string_type):
+        if isinstance(amazon_channel, str):
             devices.append({"amazon_channel": amazon_channel})
         elif amazon_channel:
             devices.extend({"amazon_channel": c} for c in amazon_channel)
 
-        if isinstance(named_user_id, string_type):
+        if isinstance(named_user_id, str):
             devices.append({"named_user_id": named_user_id})
         elif named_user_id:
             devices.extend({"named_user_id": c} for c in named_user_id)
