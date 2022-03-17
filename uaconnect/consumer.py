@@ -7,7 +7,12 @@ import requests
 
 logger = logging.getLogger("uaconnect")
 
-CONNECT_URL = 'https://connect.urbanairship.com/api/events/'
+
+US_BASE_URL = "https://connect.urbanairship.com/"
+EU_BASE_URL = "https://connect.asnapieu.com/"
+EVENT_PATH = "api/events"
+COMPLIANCE_PATH = "api/events/general"
+CONNECT_URL = "https://connect.urbanairship.com/api/events/"
 
 
 class InvalidParametersError(Exception):
@@ -52,9 +57,9 @@ class AirshipFailure(Exception):
 
         try:
             payload = response.json()
-            error = payload.get('error')
-            error_code = payload.get('error_code')
-            details = payload.get('details')
+            error = payload.get("error")
+            error_code = payload.get("error_code")
+            details = payload.get("details")
         except ValueError:
             error = response.reason
             error_code = None
@@ -62,15 +67,14 @@ class AirshipFailure(Exception):
 
         logger.error(
             "Request failed with status %d: '%s %s': %s",
-            response.status_code, error_code, error, json.dumps(details))
+            response.status_code,
+            error_code,
+            error,
+            json.dumps(details),
+        )
 
         return cls(
-            error,
-            error_code,
-            details,
-            response,
-            response.status_code,
-            response.content
+            error, error_code, details, response, response.status_code, response.content
         )
 
 
@@ -97,18 +101,19 @@ class Connection(object):
         self.stream = None
 
     def _headers(self):
-        auth = 'Bearer %s' % self.access_token
+        auth = "Bearer %s" % self.access_token
         headers = {
-            'Authorization': auth,
-            'Accept': 'application/vnd.urbanairship+x-ndjson; version=3;',
-            'Content-Type': 'application/json',
-            'X-UA-Appkey': self.app_key,
+            "Authorization": auth,
+            "Accept": "application/vnd.urbanairship+x-ndjson; version=3;",
+            "Content-Type": "application/json",
+            "X-UA-Appkey": self.app_key,
         }
         return headers
 
     def connect(self, filters, resume_offset=None, start=None):
-        logger.info("Opening connection to %s, offset %s", self.url,
-                    resume_offset or start)
+        logger.info(
+            "Opening connection to %s, offset %s", self.url, resume_offset or start
+        )
 
         backoff = 0.1
         attempts = 0
@@ -116,45 +121,59 @@ class Connection(object):
         while not self.stop:
             attempts += 1
             payload = {}
-            if resume_offset and start: 
-                raise InvalidParametersError
+
+            if resume_offset and start:
                 logging.error("Request can only have start or resume_offset parameter")
                 self.stop
-            elif resume_offset:
-                payload['resume_offset'] = resume_offset
-            elif start == 'EARLIEST' or start == 'LATEST':
-                payload['start'] = start
-            elif start is None and resume_offset is None:
-                payload['start'] = 'LATEST'
-            else:
                 raise InvalidParametersError
+            elif resume_offset:
+                payload["resume_offset"] = resume_offset
+            elif start == "EARLIEST" or start == "LATEST":
+                payload["start"] = start
+            elif start is None and resume_offset is None:
+                payload["start"] = "LATEST"
+            else:
                 logging.error("Start can only be one of EARLIEST or LATEST")
                 self.stop
+                raise InvalidParametersError
+
             if filters:
-                payload['filters'] = filters
+                payload["filters"] = filters
+
             self.body = json.dumps(payload)
+
             try:
-                self._conn = requests.post(self.url, data=self.body,
-                                           headers=self._headers(),
-                                           stream=True,
-                                           cookies=self.cookies)
+                self._conn = requests.post(
+                    self.url,
+                    data=self.body,
+                    headers=self._headers(),
+                    stream=True,
+                    cookies=self.cookies,
+                )
+
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
                     self.cookies = self._conn.cookies
                     continue
                 elif not self._conn.status_code == 200:
                     raise AirshipFailure.from_response(self._conn)
+
                 self.stream = self._conn.iter_lines()
+
                 attempts = 0
                 break
             except requests.exceptions.ConnectionError:
                 if attempts > 9:
-                    errorString = ("Unable to connect after [%s] attempts, "
-                                   "giving up" % attempts)
+                    errorString = (
+                        "Unable to connect after [%s] attempts, " "giving up" % attempts
+                    )
                     raise ConnectionError(errorString)
+
                 logging.info("Connection failed, retrying [%s]", attempts)
                 time.sleep(backoff)
+
                 backoff += backoff * attempts
+
                 if backoff > 10:
                     backoff = 10
 
@@ -168,24 +187,33 @@ class Consumer(object):
     access_token = None
     recorder = None
     url = None
+    api_path = EVENT_PATH
     connection = None
     outstanding = None
     _stop = False
-    offset_filename = '.offset'
+    offset_filename = ".offset"
     offset = None
     filters = None
 
-    def __init__(self, app_key, access_token, recorder, url=None):
+    def __init__(self, app_key, access_token, recorder, url="us"):
         self.app_key = app_key
         self.access_token = access_token
         self.recorder = recorder
-        if url is not None:
-            self.url = url
-        else:
-            self.url = CONNECT_URL
         self.outstanding = collections.OrderedDict()
-        self.connection = Connection(app_key, access_token, self.url)
         self.filters = []
+
+        if url.lower() == "us":
+            self.base_url = US_BASE_URL
+            logging.info("Using US base url")
+        elif url.lower() == "eu":
+            self.base_url = EU_BASE_URL
+            logging.info("Using EU base url")
+        else:
+            self.base_url = url
+            logging.info(f"Using base url: {url}")
+        self.url = f"{self.base_url}{self.api_path}"
+
+        self.connection = Connection(app_key, access_token, self.url)
 
     def _record(self, event):
         self.outstanding[event.offset] = event
@@ -197,8 +225,7 @@ class Consumer(object):
 
         # check that offset is in outstanding
         if offset not in self.outstanding:
-            raise ValueError("Received ack for unknown event offset {}"
-                             .format(offset))
+            raise ValueError("Received ack for unknown event offset {}".format(offset))
         last = None
 
         if offset == next(iter(self.outstanding)):
@@ -224,15 +251,15 @@ class Consumer(object):
     def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
         if start and resume_offset:
-            raise InvalidParametersError
             logging.error("Request can only have start or resume_offset parameter")
+            raise InvalidParametersError
         elif resume_offset:
             self.offset = resume_offset
-        elif start == 'EARLIEST' or start == 'LATEST':
+        elif start == "EARLIEST" or start == "LATEST":
             self.start = start
         elif start:
-            raise InvalidParametersError
             logging.error("Start can only be one of EARLIEST or LATEST")
+            raise InvalidParametersError
         else:
             self.offset = self.recorder.read_offset()
 
@@ -241,7 +268,7 @@ class Consumer(object):
         elif self.start:
             self.connection.connect(self.filters, start=self.start)
         else:
-            self.connection.connect(self.filters, start='LATEST')
+            self.connection.connect(self.filters, start="LATEST")
 
     def read(self):
         """Read the stream and yield each event as it is streamed.
@@ -261,11 +288,9 @@ class Consumer(object):
                 e = Event.from_json(line)
                 self._record(e)
                 yield e
-            except (requests.exceptions.ConnectionError,
-                    StopIteration):
+            except (requests.exceptions.ConnectionError, StopIteration):
                 self.connection.close()
-                self.connection.connect(self.access_token,
-                                        resume_offset=self.offset)
+                self.connection.connect(self.access_token, resume_offset=self.offset)
 
     def stop(self):
         """Instruct the consumer to stop and close the connection cleanly."""
@@ -284,19 +309,18 @@ class Consumer(object):
 class Event(object):
     """An event returned from Connect."""
 
-    __slots__ = ('raw', 'data', 'id', 'device', 'event_type', 'offset')
+    __slots__ = ("raw", "data", "id", "device", "event_type", "offset")
 
     @classmethod
     def from_json(cls, payload):
         event = cls()
         event.raw = payload
-        event.data = json.loads(payload.decode('utf8'))
-        event.id = event.data['id']
-        event.event_type = event.data['type']
-        event.offset = event.data['offset']
-        event.device = event.data.get('device', None)
+        event.data = json.loads(payload.decode("utf8"))
+        event.id = event.data["id"]
+        event.event_type = event.data["type"]
+        event.offset = event.data["offset"]
+        event.device = event.data.get("device", None)
         return event
 
     def __repr__(self):
-        return "<Event {} {} [{}]>".format(self.event_type, self.id,
-                                           self.offset)
+        return "<Event {} {} [{}]>".format(self.event_type, self.id, self.offset)
