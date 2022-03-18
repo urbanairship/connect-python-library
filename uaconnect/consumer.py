@@ -250,16 +250,20 @@ class Consumer(object):
 
     def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
-        if start and resume_offset:
+        possible_start_values = ("LATEST", "EARLIEST")
+        if not start and not resume_offset:
+            logging.error("One of resume_offset or start must be passed.")
+            raise InvalidParametersError
+        elif start and resume_offset:
             logging.error("Request can only have start or resume_offset parameter")
             raise InvalidParametersError
         elif resume_offset:
             self.offset = resume_offset
-        elif start == "EARLIEST" or start == "LATEST":
-            self.start = start
-        elif start:
+        elif start not in possible_start_values:
             logging.error("Start can only be one of EARLIEST or LATEST")
             raise InvalidParametersError
+        elif start in possible_start_values:
+            self.start = start
         else:
             self.offset = self.recorder.read_offset()
 
@@ -307,20 +311,36 @@ class Consumer(object):
 
 
 class Event(object):
-    """An event returned from Connect."""
+    """An event returned from RTDS."""
 
-    __slots__ = ("raw", "data", "id", "device", "event_type", "offset")
+    __slots__ = (
+        "raw",
+        "data",
+        "id",
+        "device",
+        "event_type",
+        "offset",
+        "occurred",
+        "processed",
+        "body",
+    )
 
     @classmethod
     def from_json(cls, payload):
         event = cls()
         event.raw = payload
-        event.data = json.loads(payload.decode("utf8"))
+        event.data = json.loads(payload)
         event.id = event.data["id"]
         event.event_type = event.data["type"]
         event.offset = event.data["offset"]
         event.device = event.data.get("device", None)
+        event.occurred = event.data["occurred"]
+        event.processed = event.data["processed"]
+        event.body = event.data.get("body")
+
         return event
 
     def __repr__(self):
-        return "<Event {} {} [{}]>".format(self.event_type, self.id, self.offset)
+        return (
+            f"<[{self.occurred}] - Event {self.event_type} {self.id} [{self.offset}]>"
+        )
