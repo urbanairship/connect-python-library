@@ -251,14 +251,17 @@ class Consumer(object):
     def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
         possible_start_values = ("LATEST", "EARLIEST")
-        if start and resume_offset:
-            logging.error("Request can only have start or resume_offset parameter")
+        if not start and not resume_offset:
+            logging.error("One of resume_offset or start must be passed.")
             raise InvalidParametersError
-        elif start not in possible_start_values:
-            logging.error("Start can only be one of EARLIEST or LATEST")
+        elif start and resume_offset:
+            logging.error("Request can only have start or resume_offset parameter")
             raise InvalidParametersError
         elif resume_offset:
             self.offset = resume_offset
+        elif start not in possible_start_values:
+            logging.error("Start can only be one of EARLIEST or LATEST")
+            raise InvalidParametersError
         elif start in possible_start_values:
             self.start = start
         else:
