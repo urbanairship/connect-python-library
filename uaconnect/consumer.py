@@ -310,6 +310,25 @@ class Consumer(object):
         self.filters.append(filter_.filters)
 
 
+class EventConsumer(Consumer):
+    """Class used to read Real Time Data Stream events from the Airship RTDS Streaming
+    API. C
+
+    """
+
+    api_path = EVENT_PATH
+
+    def __init__(self, app_key, access_token, recorder, url="us"):
+        super().__init__(app_key, access_token, recorder, url)
+
+
+class ComplianceConsumer(Consumer):
+    api_path = COMPLIANCE_PATH
+
+    def __init__(self, app_key, access_token, recorder, url="us"):
+        super().__init__(app_key, access_token, recorder, url)
+
+
 class Event(object):
     """An event returned from RTDS."""
 
