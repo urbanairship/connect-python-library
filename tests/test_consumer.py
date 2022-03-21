@@ -4,6 +4,7 @@ import unittest
 import mock
 
 from uaconnect import consumer
+import uaconnect
 
 
 class TestConsumer(unittest.TestCase):
@@ -164,3 +165,25 @@ class TestConsumer(unittest.TestCase):
         c = consumer.Consumer("key", "token", "recorder", url="https://user-input.url/")
 
         self.assertEqual(c.url, "https://user-input.url/api/events")
+
+    def test_event_obj_attrs(self):
+        event_consumer = uaconnect.EventConsumer(
+            app_key="app_key",
+            access_token="fake_token",
+            recorder=uaconnect.FileRecorder(".offset"),
+        )
+
+        self.assertEqual(event_consumer.api_path, "api/events")
+        self.assertEqual(event_consumer.access_token, "fake_token")
+        self.assertEqual(event_consumer.master_secret, None)
+
+    def test_compliance_obj_attrs(self):
+        comp_consumer = uaconnect.ComplianceConsumer(
+            app_key="app_key",
+            master_secret="fake_secret",
+            recorder=uaconnect.FileRecorder(".offset"),
+        )
+
+        self.assertEqual(comp_consumer.api_path, "api/events/general")
+        self.assertEqual(comp_consumer.access_token, None)
+        self.assertEqual(comp_consumer.master_secret, "fake_secret")
