@@ -1,5 +1,4 @@
 import json
-from os import access
 import unittest
 import mock
 
