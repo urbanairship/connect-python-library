@@ -82,6 +82,7 @@ class Connection(object):
 
     app_key = None
     access_token = None
+    master_secret = None
     stream = None
     _conn = None
     stop = False
