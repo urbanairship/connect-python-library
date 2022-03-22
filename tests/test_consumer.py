@@ -3,11 +3,12 @@ import unittest
 import mock
 
 from uaconnect import consumer
+import uaconnect
 
 
 class TestConsumer(unittest.TestCase):
     def test_connect_success(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         conn = mock.Mock()
         conn.status_code = 200
@@ -16,7 +17,7 @@ class TestConsumer(unittest.TestCase):
             c.connect(None)
 
     def test_connect_307(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
         c._headers = mock.Mock(return_value={"auth": "fake"})
 
         redir_conn = mock.Mock()
@@ -40,14 +41,14 @@ class TestConsumer(unittest.TestCase):
             post.assert_has_calls(
                 [
                     mock.call(
-                        "url",
+                        "us",
                         data=payload,
                         headers={"auth": "fake"},
                         stream=True,
                         cookies=None,
                     ),
                     mock.call(
-                        "url",
+                        "us",
                         data=payload,
                         headers={"auth": "fake"},
                         stream=True,
@@ -57,7 +58,7 @@ class TestConsumer(unittest.TestCase):
             )
 
     def test_connect_failure_retry(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         conn = mock.Mock()
         conn.status_code = 200
@@ -72,7 +73,7 @@ class TestConsumer(unittest.TestCase):
                 sleep.assert_called_with(0.1)
 
     def test_connect_failure_retries_exceeded(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         with mock.patch("uaconnect.consumer.time.sleep") as sleep:
             with mock.patch(
@@ -87,7 +88,7 @@ class TestConsumer(unittest.TestCase):
                 self.assertEqual(sleep.call_count, 9)
 
     def test_connect_resume_offset(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         c.filters = {}
         conn = mock.Mock()
@@ -98,7 +99,7 @@ class TestConsumer(unittest.TestCase):
             self.assertEqual(c.body, '{"resume_offset": "123456789"}')
 
     def test_connect_start_earliest(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         c.filters = {}
         conn = mock.Mock()
@@ -109,7 +110,7 @@ class TestConsumer(unittest.TestCase):
             self.assertEqual(c.body, '{"start": "EARLIEST"}')
 
     def test_connect_start_latest(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         c.filters = {}
         conn = mock.Mock()
@@ -120,7 +121,7 @@ class TestConsumer(unittest.TestCase):
             self.assertEqual(c.body, '{"start": "LATEST"}')
 
     def test_connect_start_invalid_input(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         c.filters = {}
 
@@ -133,7 +134,7 @@ class TestConsumer(unittest.TestCase):
             )
 
     def test_connect_start_and_resume_offset_error(self):
-        c = consumer.Connection("key", "token", "url")
+        c = consumer.Connection(app_key="key", access_token="token", url="us")
 
         c.filters = {}
 
@@ -163,3 +164,25 @@ class TestConsumer(unittest.TestCase):
         c = consumer.Consumer("key", "token", "recorder", url="https://user-input.url/")
 
         self.assertEqual(c.url, "https://user-input.url/api/events")
+
+    def test_event_obj_attrs(self):
+        event_consumer = uaconnect.EventConsumer(
+            app_key="app_key",
+            access_token="fake_token",
+            recorder=uaconnect.FileRecorder(".offset"),
+        )
+
+        self.assertEqual(event_consumer.api_path, "api/events")
+        self.assertEqual(event_consumer.access_token, "fake_token")
+        self.assertEqual(event_consumer.master_secret, None)
+
+    def test_compliance_obj_attrs(self):
+        comp_consumer = uaconnect.ComplianceConsumer(
+            app_key="app_key",
+            master_secret="fake_secret",
+            recorder=uaconnect.FileRecorder(".offset"),
+        )
+
+        self.assertEqual(comp_consumer.api_path, "api/events/general")
+        self.assertEqual(comp_consumer.access_token, None)
+        self.assertEqual(comp_consumer.master_secret, "fake_secret")

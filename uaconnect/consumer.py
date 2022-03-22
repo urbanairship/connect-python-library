@@ -82,15 +82,17 @@ class Connection(object):
 
     app_key = None
     access_token = None
+    master_secret = None
     stream = None
     _conn = None
     stop = False
     url = None
     cookies = None
 
-    def __init__(self, app_key, access_token, url):
+    def __init__(self, app_key, url, access_token=None, master_secret=None):
         self.app_key = app_key
         self.access_token = access_token
+        self.master_secret = master_secret
         self.url = url
 
     def close(self):
@@ -100,13 +102,14 @@ class Connection(object):
         self.stream = None
 
     def _headers(self):
-        auth = "Bearer %s" % self.access_token
         headers = {
-            "Authorization": auth,
             "Accept": "application/vnd.urbanairship+x-ndjson; version=3;",
             "Content-Type": "application/json",
             "X-UA-Appkey": self.app_key,
         }
+        if self.access_token:
+            headers["Authorization"] = f"Bearer {self.access_token}"
+
         return headers
 
     def connect(self, filters, resume_offset=None, start=None):
@@ -142,13 +145,23 @@ class Connection(object):
             self.body = json.dumps(payload)
 
             try:
-                self._conn = requests.post(
-                    self.url,
-                    data=self.body,
-                    headers=self._headers(),
-                    stream=True,
-                    cookies=self.cookies,
-                )
+                if self.access_token:
+                    self._conn = requests.post(
+                        self.url,
+                        data=self.body,
+                        headers=self._headers(),
+                        stream=True,
+                        cookies=self.cookies,
+                    )
+                else:
+                    self._conn = requests.post(
+                        self.url,
+                        data=self.body,
+                        auth=(self.app_key, self.master_secret),
+                        headers=self._headers(),
+                        stream=True,
+                        cookies=self.cookies,
+                    )
 
                 if self._conn.status_code == 307:
                     logging.info("Handling redirect, retrying [%s]", attempts)
@@ -184,6 +197,7 @@ class Consumer(object):
 
     app_key = None
     access_token = None
+    master_secret = None
     recorder = None
     base_url = None
     url = None
@@ -195,9 +209,12 @@ class Consumer(object):
     offset = None
     filters = None
 
-    def __init__(self, app_key, access_token, recorder, url="us"):
+    def __init__(
+        self, app_key, recorder, access_token=None, master_secret=None, url="us"
+    ):
         self.app_key = app_key
         self.access_token = access_token
+        self.master_secret = master_secret
         self.recorder = recorder
         self.outstanding = collections.OrderedDict()
         self.filters = []
@@ -213,7 +230,14 @@ class Consumer(object):
             logging.info(f"Using base url: {url}")
         self.url = f"{self.base_url}{self.api_path}"
 
-        self.connection = Connection(app_key, access_token, self.url)
+        if self.access_token:
+            self.connection = Connection(
+                app_key=self.app_key, access_token=self.access_token, url=self.url
+            )
+        else:
+            self.connection = Connection(
+                app_key=self.app_key, master_secret=self.master_secret, url=self.url
+            )
 
     def _record(self, event):
         self.outstanding[event.offset] = event
@@ -251,6 +275,7 @@ class Consumer(object):
     def connect(self, resume_offset=None, start=None):
         """Connect to the stream using the given filters and offset/start."""
         possible_start_values = ("LATEST", "EARLIEST")
+
         if not start and not resume_offset:
             logging.error("One of resume_offset or start must be passed.")
             raise InvalidParametersError
@@ -308,6 +333,38 @@ class Consumer(object):
 
         """
         self.filters.append(filter_.filters)
+
+
+class EventConsumer(Consumer):
+    """Consume Real Time Data Stream events from the Airship RTDS Streaming API."""
+
+    api_path = EVENT_PATH
+
+    def __init__(self, app_key, access_token, recorder, url="us"):
+        super().__init__(
+            app_key=app_key, access_token=access_token, recorder=recorder, url=url
+        )
+
+        if not access_token:
+            raise InvalidParametersError(
+                "access_token authentication must be used to authenticate with EventConsumer"
+            )
+
+
+class ComplianceConsumer(Consumer):
+    """Consume Real Time Data Stream Compliance events from the Airship RTDS Streaming API"""
+
+    api_path = COMPLIANCE_PATH
+
+    def __init__(self, app_key, master_secret, recorder, url="us"):
+        super().__init__(
+            app_key=app_key, master_secret=master_secret, recorder=recorder, url=url
+        )
+
+        if not master_secret:
+            raise InvalidParametersError(
+                "master_secret authentication must be used to authenticate with ComplianceConsumer"
+            )
 
 
 class Event(object):
