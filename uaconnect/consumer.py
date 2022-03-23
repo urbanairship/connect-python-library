@@ -171,7 +171,7 @@ class Connection:
 
     def connect(
         self,
-        filters: List[Filter],
+        filters: List[Dict[str, Any]],
         resume_offset: Optional[str] = None,
         start=None,
     ) -> None:
@@ -278,7 +278,7 @@ class Consumer(object):
     outstanding: Dict
     offset_filename: str = ".offset"
     offset: Optional[str] = None
-    filters: List[Filter]
+    filters: List[Dict[str, Any]]
     _stop: bool = False
 
     def __init__(
