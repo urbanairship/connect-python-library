@@ -39,12 +39,12 @@ To consume standard events from the RTDS API, instantiate a ``EventConsumer`` ob
 with the application key, access token, and an offset recorder. You can then open the
 connection, and start reading events.
 
-See more about the RTDS Event Stream 
+See more about the RTDS Event Stream
 `in our documentation here <https://docs.airship.com/api/connect/#tag-event-stream>`_.
 
     >>> import uaconnect
     >>> consumer = uaconnect.EventConsumer(
-    ...     app_key='application_key', 
+    ...     app_key='application_key',
     ...     access_token='access_token',
     ...     recorder=uaconnect.FileRecorder('.offset'))
     >>> consumer.connect()
@@ -62,12 +62,12 @@ To consume compliance events from the RTDS API, instantiate a ``ComplianceConsum
 with the application key, master secret and an offset recorder. You can then open the
 connection, and start reading events.
 
-See more about the RTDS Compliance Event Stream 
+See more about the RTDS Compliance Event Stream
 `in the documentation here <https://docs.airship.com/api/connect/#tag-compliance-event-stream>`_.
 
     >>> import uaconnect
     >>> consumer = uaconnect.EventConsumer(
-    ...     app_key='application_key', 
+    ...     app_key='application_key',
     ...     master_secret='master_secret',
     ...     recorder=uaconnect.FileRecorder('.offset'))
     >>> consumer.connect()
@@ -78,13 +78,28 @@ See more about the RTDS Compliance Event Stream
     >>>     consumer.ack(event)
 
 
+Alternate Data Center Support
+----------------------
+
+When instantiating a ``EventConsumer`` or ``ComplianceConsumer`` you can pass the optional
+`url` argument to explicitly specify the data center your project is located in. Possible
+values are "US", "EU", or an arbitrary base url in the form of `http://domain.xyz/`. The
+library will build the URL path properly from there. If no `url` is specified, "US" is used.
+
+    >>> import uaconnect
+    >>> consumer = uaconnect.EventConsumer(
+    ...     app_key='application_key',
+    ...     master_secret='master_secret',
+    ...     url='EU',
+    ...     recorder=uaconnect.FileRecorder('.offset'))
+
 
 Offset recorders
 ----------------
 
 Offset recorders inherit from the abstract base class ``uaconnect.Recorder``,
 implementing ``read_offset`` and ``write_offset`` methods. One recorder is
-included in the library, ``FileRecorder``, which stores the offest on disk. In
+included in the library, ``FileRecorder``, which stores the offset on disk. In
 the ``uaconnect.ext.redisrecorder`` package there is an example implementation
 of using an Redis instance to store the offset.
 
@@ -143,7 +158,7 @@ Here's a brief example on how to use filters with ``uaconnect``:
 
     >>> import uaconnect
     >>> consumer = uaconnect.EventConsumer(
-    ...     app_key='application_key', 
+    ...     app_key='application_key',
     ...     access_token='access_token',
     ...     recorder=uaconnect.FileRecorder('.offset')
     ...     )
