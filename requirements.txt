@@ -1,2 +1,6 @@
 requests>=2.27
 mock
+types-requests
+types-redis
+mypy
+black

@@ -4,7 +4,6 @@ Used to maintain the current state of the stream.
 
 """
 import abc
-import collections
 import os
 
 
@@ -23,9 +22,9 @@ class Recorder(object):
 
 
 class FileRecorder(Recorder):
-    filename = None
+    filename: str
 
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         super(FileRecorder, self).__init__()
         self.filename = filename
 
@@ -37,7 +36,7 @@ class FileRecorder(Recorder):
             offset = None
         return offset
 
-    def write_offset(self, offset):
+    def write_offset(self, offset: str):
         f = open(self.filename, "w")
         f.write(offset)
         f.close()
