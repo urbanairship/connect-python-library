@@ -1,0 +1,8 @@
+# uaconnect changelog
+
+## 1.0.0
+
+- First major version release
+- Adds EventConsumer and ComplianceConsumer classes for event consumption
+- Adds type annotations
+- Adds support for EU data center connections
