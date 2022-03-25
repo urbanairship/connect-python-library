@@ -13,7 +13,7 @@ http://support.airship.com/
 Requirements
 ============
 
-Tested on Python 2.7 and 3.5, and should work with 3.3+.
+Tested on Python 3.6, 3.7, 3.8, and 3.9.
 
 For tests, ``uaconnect`` also needs `Mock <https://github.com/testing-cabal/mock>`_.
 
@@ -25,24 +25,28 @@ To run tests, run:
     $ python -m unittest discover
 
 Usage
-=====
+======
 
 See the `Real-Time Data Streaming Getting Started Guide
 <https://docs.airship.com/tutorials/getting-started/data-streaming/>`_, as
 well as the `Real-Time Data Streaming API docs
 <https://docs.airship.com/api/connect/>`_ for more details.
 
-Basic usage
------------
+RTDS Event Consumer
+-------------------
 
-To use the library, instantiate a ``Consumer`` object with the application key,
-access token, and an offset recorder. You can then open the connection, and
-start reading events.
+To consume standard events from the RTDS API, instantiate a ``EventConsumer`` object
+with the application key, access token, and an offset recorder. You can then open the
+connection, and start reading events.
+
+See more about the RTDS Event Stream
+`in our documentation here <https://docs.airship.com/api/connect/#tag-event-stream>`_.
 
     >>> import uaconnect
-    >>> consumer = uaconnect.Consumer(
-    ...     'application_key', 'access_token',
-    ...     uaconnect.FileRecorder('.offset'))
+    >>> consumer = uaconnect.EventConsumer(
+    ...     app_key='application_key',
+    ...     access_token='access_token',
+    ...     recorder=uaconnect.FileRecorder('.offset'))
     >>> consumer.connect()
     >>> for event in consumer.read():
     ...     if event is None:
@@ -51,12 +55,51 @@ start reading events.
     >>>     consumer.ack(event)
 
 
+RTDS Compliance Event Consumer
+------------------------------
+
+To consume compliance events from the RTDS API, instantiate a ``ComplianceConsumer`` object
+with the application key, master secret and an offset recorder. You can then open the
+connection, and start reading events.
+
+See more about the RTDS Compliance Event Stream
+`in the documentation here <https://docs.airship.com/api/connect/#tag-compliance-event-stream>`_.
+
+    >>> import uaconnect
+    >>> consumer = uaconnect.EventConsumer(
+    ...     app_key='application_key',
+    ...     master_secret='master_secret',
+    ...     recorder=uaconnect.FileRecorder('.offset'))
+    >>> consumer.connect()
+    >>> for event in consumer.read():
+    ...     if event is None:
+    ...        continue
+    >>>     print("Got event: {}".format(event))
+    >>>     consumer.ack(event)
+
+
+Alternate Data Center Support
+----------------------
+
+When instantiating a ``EventConsumer`` or ``ComplianceConsumer`` you can pass the optional
+`url` argument to explicitly specify the data center your project is located in. Possible
+values are "US", "EU", or an arbitrary base url in the form of `http://domain.xyz/`. The
+library will build the URL path properly from there. If no `url` is specified, "US" is used.
+
+    >>> import uaconnect
+    >>> consumer = uaconnect.EventConsumer(
+    ...     app_key='application_key',
+    ...     master_secret='master_secret',
+    ...     url='EU',
+    ...     recorder=uaconnect.FileRecorder('.offset'))
+
+
 Offset recorders
 ----------------
 
 Offset recorders inherit from the abstract base class ``uaconnect.Recorder``,
 implementing ``read_offset`` and ``write_offset`` methods. One recorder is
-included in the library, ``FileRecorder``, which stores the offest on disk. In
+included in the library, ``FileRecorder``, which stores the offset on disk. In
 the ``uaconnect.ext.redisrecorder`` package there is an example implementation
 of using an Redis instance to store the offset.
 
@@ -114,9 +157,11 @@ documentation <https://docs.airship.com/api/connect/#schemas/filters>`_.
 Here's a brief example on how to use filters with ``uaconnect``:
 
     >>> import uaconnect
-    >>> consumer = uaconnect.Consumer(
-    ...     'application_key', 'access_token',
-    ...     uaconnect.FileRecorder('.offset'))
+    >>> consumer = uaconnect.EventConsumer(
+    ...     app_key='application_key',
+    ...     access_token='access_token',
+    ...     recorder=uaconnect.FileRecorder('.offset')
+    ...     )
     >>> f = uaconnect.Filter()
     >>> f.types("PUSH_BODY", "SEND") # only receive PUSH_BODY and SEND events.
     >>> consumer.add_filter(f)
