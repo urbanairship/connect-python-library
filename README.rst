@@ -79,7 +79,7 @@ See more about the RTDS Compliance Event Stream
 
 
 Alternate Data Center Support
-----------------------
+------------------------------
 
 When instantiating a ``EventConsumer`` or ``ComplianceConsumer`` you can pass the optional
 `url` argument to explicitly specify the data center your project is located in. Possible
