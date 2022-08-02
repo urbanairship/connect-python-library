@@ -1,5 +1,9 @@
 # uaconnect changelog
 
+## 1.0.1
+
+- Fixes bug to allow reading offset values from recorder if no explicit `start` or `resume_offset` is passed when calling `Consumer.connect()`
+
 ## 1.0.0
 
 - First major version release
