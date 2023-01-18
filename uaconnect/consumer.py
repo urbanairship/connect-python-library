@@ -226,10 +226,16 @@ class Connection:
                         cookies=self.cookies,
                     )
                 else:
+                    if self.app_key and self.master_secret:
+                        auth = (self.app_key, self.master_secret)
+                    else:
+                        raise InvalidParametersError(
+                            "Both app_key and master_secret must be included if authenticating with key and secret"
+                        )
                     self._conn = requests.post(
                         self.url,
                         data=self.body,
-                        auth=(self.app_key, self.master_secret),
+                        auth=auth,
                         headers=self._headers(),
                         stream=True,
                         cookies=self.cookies,
