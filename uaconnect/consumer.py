@@ -226,10 +226,16 @@ class Connection:
                         cookies=self.cookies,
                     )
                 else:
+                    if self.app_key and self.master_secret:
+                        auth = (self.app_key, self.master_secret)
+                    else:
+                        raise InvalidParametersError(
+                            "Both app_key and master_secret must be included if authenticating with key and secret"
+                        )
                     self._conn = requests.post(
                         self.url,
                         data=self.body,
-                        auth=(self.app_key, self.master_secret),
+                        auth=auth,
                         headers=self._headers(),
                         stream=True,
                         cookies=self.cookies,
@@ -361,13 +367,13 @@ class Consumer(object):
         if start and resume_offset:
             logging.error("Request can only have start or resume_offset parameter")
             raise InvalidParametersError
+        elif resume_offset:
+            self.offset = resume_offset
         elif start not in possible_start_values:
             logging.error("Start can only be one of EARLIEST or LATEST")
             raise InvalidParametersError
         elif start in possible_start_values:
             self.start = start
-        elif resume_offset:
-            self.offset = resume_offset
         else:
             logging.info(
                 "Neither start nor resume_offset was provided. Attempting to read offset from recorder."
