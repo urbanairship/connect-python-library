@@ -3,4 +3,4 @@ mock
 types-requests
 types-redis
 mypy
-black
+black==22.3.0
